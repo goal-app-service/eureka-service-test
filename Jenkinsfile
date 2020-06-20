@@ -4,12 +4,8 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Building..'
-            }
-        }
-        stage('Test') {
-            steps {
-                echo 'Testing..'
+               sh 'make'
+               archiveArtifacts artifacts: '**/docker/*.jar', fingerprint: true
             }
         }
         stage('Publish') {
