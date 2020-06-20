@@ -4,8 +4,17 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-               sh 'make'
-               archiveArtifacts artifacts: '**/docker/*.jar', fingerprint: true
+                sh './gradlew build'
+            }
+        }
+        stage('Copy Jar') {
+            steps {
+                sh './gradlew copyJar'
+             }
+        }
+        stage('Create Dockerfile') {
+            steps {
+                sh './gradlew createDockerfile'
             }
         }
         stage('Publish') {
@@ -13,11 +22,13 @@ pipeline {
                 registryCredential = 'dockerhub'
             }
             steps{
-                script {
-                    def appimage = docker.build("eureka-service:${env.BUILD_ID}", "-f docker/Dockerfile .")
-                    docker.withRegistry( '', registryCredential ) {
-                        appimage.push()
-                        appimage.push('latest')
+                dir('build/docker'){
+                    script{
+                        def appimage = docker.build("pokl/eureka-service:${env.BUILD_ID}", "-f Dockerfile .")
+                        docker.withRegistry( '', registryCredential ) {
+                            appimage.push()
+                            appimage.push('latest')
+                        }
                     }
                 }
             }
